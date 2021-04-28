@@ -7,7 +7,7 @@
 // Creating the Viewer
 //////////////////////////////////////////////////////////////////////////
 
-var viewer = new Cesium.Viewer("cesiumContainer", {
+const viewer = new Cesium.Viewer("cesiumContainer", {
   scene3DOnly: true,
   selectionIndicator: false,
   baseLayerPicker: false,
@@ -45,17 +45,17 @@ viewer.scene.globe.depthTestAgainstTerrain = true;
 viewer.scene.globe.enableLighting = true;
 
 // Create an initial camera view
-var initialPosition = new Cesium.Cartesian3.fromDegrees(
+const initialPosition = new Cesium.Cartesian3.fromDegrees(
   -73.998114468289017509,
   40.674512895646692812,
   2631.082799425431
 );
-var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
+const initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(
   7.1077496389876024807,
   -31.987223091598949054,
   0.025883251314954971306
 );
-var homeCameraView = {
+const homeCameraView = {
   destination: initialPosition,
   orientation: {
     heading: initialOrientation.heading,
@@ -95,14 +95,14 @@ viewer.timeline.zoomTo(viewer.clock.startTime, viewer.clock.stopTime); // set vi
 // Loading and Styling Entity Data
 //////////////////////////////////////////////////////////////////////////
 
-var kmlOptions = {
+const kmlOptions = {
   camera: viewer.scene.camera,
   canvas: viewer.scene.canvas,
   clampToGround: true,
 };
 // Load geocache points of interest from a KML file
 // Data from : http://catalog.opendata.city/dataset/pediacities-nyc-neighborhoods/resource/91778048-3c58-449c-a3f9-365ed203e914
-var geocachePromise = Cesium.KmlDataSource.load(
+const geocachePromise = Cesium.KmlDataSource.load(
   "./Source/SampleData/sampleGeocacheLocations.kml",
   kmlOptions
 );
@@ -113,10 +113,11 @@ geocachePromise.then(function (dataSource) {
   viewer.dataSources.add(dataSource);
 
   // Get the array of entities
-  var geocacheEntities = dataSource.entities.values;
+  const geocacheEntities = dataSource.entities.values;
 
-  for (var i = 0; i < geocacheEntities.length; i++) {
-    var entity = geocacheEntities[i];
+  // using `const` in this loop does not seem to play nice with rest of code
+  for (let i = 0; i < geocacheEntities.length; i++) {
+    const entity = geocacheEntities[i];
     if (Cesium.defined(entity.billboard)) {
       // Adjust the vertical origin so pins sit on terrain
       entity.billboard.verticalOrigin = Cesium.VerticalOrigin.BOTTOM;
@@ -128,13 +129,13 @@ geocachePromise.then(function (dataSource) {
         20000.0
       );
       // Compute latitude and longitude in degrees
-      var cartographicPosition = Cesium.Cartographic.fromCartesian(
+      const cartographicPosition = Cesium.Cartographic.fromCartesian(
         entity.position.getValue(Cesium.JulianDate.now())
       );
-      var latitude = Cesium.Math.toDegrees(cartographicPosition.latitude);
-      var longitude = Cesium.Math.toDegrees(cartographicPosition.longitude);
+      const latitude = Cesium.Math.toDegrees(cartographicPosition.latitude);
+      const longitude = Cesium.Math.toDegrees(cartographicPosition.longitude);
       // Modify description
-      var description =
+      const description =
         '<table class="cesium-infoBox-defaultTable cesium-infoBox-defaultTable-lighter"><tbody>' +
         "<tr><th>" +
         "Longitude" +
@@ -152,27 +153,27 @@ geocachePromise.then(function (dataSource) {
   }
 });
 
-var geojsonOptions = {
+const geojsonOptions = {
   clampToGround: true,
 };
 // Load neighborhood boundaries from a GeoJson file
 // Data from : https://data.cityofnewyork.us/City-Government/Neighborhood-Tabulation-Areas/cpf4-rkhq
-var neighborhoodsPromise = Cesium.GeoJsonDataSource.load(
+const neighborhoodsPromise = Cesium.GeoJsonDataSource.load(
   "./Source/SampleData/sampleNeighborhoods.geojson",
   geojsonOptions
 );
 
 // Save an new entity collection of neighborhood data
-var neighborhoods;
+let neighborhoods;
 neighborhoodsPromise.then(function (dataSource) {
   // Add the new data as entities to the viewer
   viewer.dataSources.add(dataSource);
   neighborhoods = dataSource.entities;
 
   // Get the array of entities
-  var neighborhoodEntities = dataSource.entities.values;
-  for (var i = 0; i < neighborhoodEntities.length; i++) {
-    var entity = neighborhoodEntities[i];
+  const neighborhoodEntities = dataSource.entities.values;
+  for (let i = 0; i < neighborhoodEntities.length; i++) {
+    const entity = neighborhoodEntities[i];
 
     if (Cesium.defined(entity.polygon)) {
       // Use kml neighborhood value as entity name
@@ -187,10 +188,11 @@ neighborhoodsPromise.then(function (dataSource) {
       // Tells the polygon to color the terrain. ClassificationType.CESIUM_3D_TILE will color the 3D tileset, and ClassificationType.BOTH will color both the 3d tiles and terrain (BOTH is the default)
       entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN;
       // Generate Polygon center
-      var polyPositions = entity.polygon.hierarchy.getValue(
+      const polyPositions = entity.polygon.hierarchy.getValue(
         Cesium.JulianDate.now()
       ).positions;
-      var polyCenter = Cesium.BoundingSphere.fromPoints(polyPositions).center;
+      //   using `const` does not work here
+      let polyCenter = Cesium.BoundingSphere.fromPoints(polyPositions).center;
       polyCenter = Cesium.Ellipsoid.WGS84.scaleToGeodeticSurface(polyCenter);
       entity.position = polyCenter;
       // Generate labels
@@ -211,12 +213,12 @@ neighborhoodsPromise.then(function (dataSource) {
 });
 
 // Load a drone flight path from a CZML file
-var dronePromise = Cesium.CzmlDataSource.load(
+const dronePromise = Cesium.CzmlDataSource.load(
   "./Source/SampleData/sampleFlight.czml"
 );
 
 // Save a new drone model entity
-var drone;
+let drone;
 dronePromise.then(function (dataSource) {
   viewer.dataSources.add(dataSource);
   // Get the entity using the id defined in the CZML data
@@ -245,7 +247,7 @@ dronePromise.then(function (dataSource) {
 //////////////////////////////////////////////////////////////////////////
 
 // Load the NYC buildings tileset
-var city = viewer.scene.primitives.add(
+const city = viewer.scene.primitives.add(
   new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(75343) })
 );
 
@@ -254,7 +256,7 @@ var city = viewer.scene.primitives.add(
 //////////////////////////////////////////////////////////////////////////
 
 // Define a white, opaque building style
-var defaultStyle = new Cesium.Cesium3DTileStyle({
+const defaultStyle = new Cesium.Cesium3DTileStyle({
   color: "color('white')",
   show: true,
 });
@@ -263,13 +265,13 @@ var defaultStyle = new Cesium.Cesium3DTileStyle({
 city.style = defaultStyle;
 
 // Define a white, transparent building style
-var transparentStyle = new Cesium.Cesium3DTileStyle({
+const transparentStyle = new Cesium.Cesium3DTileStyle({
   color: "color('white', 0.3)",
   show: true,
 });
 
 // Define a style in which buildings are colored by height
-var heightStyle = new Cesium.Cesium3DTileStyle({
+const heightStyle = new Cesium.Cesium3DTileStyle({
   color: {
     conditions: [
       ["${Height} >= 300", "rgba(45, 0, 75, 0.5)"],
@@ -284,7 +286,7 @@ var heightStyle = new Cesium.Cesium3DTileStyle({
   },
 });
 
-var tileStyle = document.getElementById("tileStyle");
+const tileStyle = document.getElementById("tileStyle");
 function set3DTileStyle() {
   var selectedStyle = tileStyle.options[tileStyle.selectedIndex].value;
   if (selectedStyle === "none") {
@@ -302,11 +304,11 @@ tileStyle.addEventListener("change", set3DTileStyle);
 //////////////////////////////////////////////////////////////////////////
 
 // If the mouse is over a point of interest, change the entity billboard scale and color
-var previousPickedEntity;
-var handler = viewer.screenSpaceEventHandler;
+let previousPickedEntity;
+const handler = viewer.screenSpaceEventHandler;
 handler.setInputAction(function (movement) {
-  var pickedPrimitive = viewer.scene.pick(movement.endPosition);
-  var pickedEntity = Cesium.defined(pickedPrimitive)
+  const pickedPrimitive = viewer.scene.pick(movement.endPosition);
+  const pickedEntity = Cesium.defined(pickedPrimitive)
     ? pickedPrimitive.id
     : undefined;
   // Unhighlight the previously picked entity
@@ -326,8 +328,8 @@ handler.setInputAction(function (movement) {
 // Setup Camera Modes
 //////////////////////////////////////////////////////////////////////////
 
-var freeModeElement = document.getElementById("freeMode");
-var droneModeElement = document.getElementById("droneMode");
+const freeModeElement = document.getElementById("freeMode");
+const droneModeElement = document.getElementById("droneMode");
 
 // Create a follow camera by tracking the drone entity
 function setViewMode() {
@@ -353,8 +355,8 @@ viewer.trackedEntityChanged.addEventListener(function () {
 // Setup Display Options
 //////////////////////////////////////////////////////////////////////////
 
-var shadowsElement = document.getElementById("shadows");
-var neighborhoodsElement = document.getElementById("neighborhoods");
+const shadowsElement = document.getElementById("shadows");
+const neighborhoodsElement = document.getElementById("neighborhoods");
 
 shadowsElement.addEventListener("change", function (e) {
   viewer.shadows = e.target.checked;
@@ -365,7 +367,7 @@ neighborhoodsElement.addEventListener("change", function (e) {
 });
 
 // Finally, wait for the initial city to be ready before removing the loading indicator.
-var loadingIndicator = document.getElementById("loadingIndicator");
+const loadingIndicator = document.getElementById("loadingIndicator");
 loadingIndicator.style.display = "block";
 city.readyPromise.then(function () {
   loadingIndicator.style.display = "none";
